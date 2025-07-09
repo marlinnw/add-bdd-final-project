@@ -86,11 +86,7 @@ def create_products():
 
     message = product.serialize()
 
-    #
-    # Uncomment this line of code once you implement READ A PRODUCT
-    #
-    # location_url = url_for("get_products", product_id=product.id, _external=True)
-    location_url = "/"  # delete once READ is implemented
+    location_url = url_for("get_products", product_id=product.id, _external=True)
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
@@ -124,6 +120,7 @@ def list_products():
     results = [product.serialize() for product in products]
     app.logger.info("[%s] Products returned", len(results))
     return results, status.HTTP_200_OK
+
 
 ######################################################################
 # R E A D   A   P R O D U C T
@@ -176,9 +173,9 @@ def delete_products(product_id):
     This endpoint will delete a Product based the id specified in the path
     """
     app.logger.info("Request to Delete a product with id [%s]", product_id)
-    
+
     product = Product.find(product_id)
     if product:
         product.delete()
-    
+
     return "", status.HTTP_204_NO_CONTENT

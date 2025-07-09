@@ -122,6 +122,7 @@ class TestProductRoutes(TestCase):
         # Make sure location header is set
         location = response.headers.get("Location", None)
         self.assertIsNotNone(location)
+        print("Location header:", location)
 
         # Check the data is correct
         new_product = response.get_json()
@@ -130,10 +131,6 @@ class TestProductRoutes(TestCase):
         self.assertEqual(Decimal(new_product["price"]), test_product.price)
         self.assertEqual(new_product["available"], test_product.available)
         self.assertEqual(new_product["category"], test_product.category.name)
-
-        #
-        # Uncomment this code once READ is implemented
-        #
 
         # Check that the location header was correct
         response = self.client.get(location)
@@ -200,6 +197,21 @@ class TestProductRoutes(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_product = response.get_json()
         self.assertEqual(updated_product["description"], "unknown")
+
+    def test_update_product_not_found(self):
+        """It should not update a product that isnt found"""
+        # create a produt to ensure non empty product database
+        test_product = ProductFactory()
+        response = self.client.post(BASE_URL, json=test_product.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # update a non existant product
+        new_product = response.get_json()
+        new_product["description"] = "unknown"
+        response = self.client.put(f"{BASE_URL}/0", json=new_product)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])
 
     # ----------------------------------------------------------
     # Test delete
@@ -274,7 +286,7 @@ class TestProductRoutes(TestCase):
         """It should Query Products by availability"""
         products = self._create_products(10)
         available_products = [product for product in products if product.available is True]
-        available_count = len(available_products)        
+        available_count = len(available_products)
         # test for available
         response = self.client.get(
             BASE_URL, query_string="available=true"
